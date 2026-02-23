@@ -11,6 +11,10 @@ const int udpPort = 5007;  // Port where udp_controller.py is listening
 
 WiFiUDP udp;
 const int input_pin = 23;
+const int pwm_pin = 22;
+const int LEDC_CHANNEL = 0;
+const int LEDC_FREQ = 38000;  // 38 kHz for IR control
+const int LEDC_RESOLUTION = 10;  // 10-bit resolution (0-1023)
 
 // Message variable
 uint8_t message = 0;
@@ -91,6 +95,12 @@ void setup() {
     attachInterrupt(digitalPinToInterrupt(input_pin), pin23ISR, RISING);
 
     Serial.println("Interrupt attached to pin 23");
+
+    // Configure pin 22 for 38 kHz PWM output
+    ledcAttach(pwm_pin, LEDC_FREQ, LEDC_RESOLUTION);
+    ledcWrite(pwm_pin, 512);  // Set 50% duty cycle (512 out of 1023 for 10-bit)
+    
+    Serial.println("Pin 22 configured for 38 kHz PWM output");
     
   } else {
     Serial.println("\n*** WiFi Connection FAILED ***");
