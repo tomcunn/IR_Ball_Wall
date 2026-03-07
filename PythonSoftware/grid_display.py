@@ -77,9 +77,8 @@ while running:
                         inner_y <= mouse_y <= inner_y + INNER_BOX_SIZE):
                         box_number = row * GRID_SIZE + col
                         print(f"Clicked Box Number: {box_number}")
-                        box_colors[row][col] = GREEN
                         # Send UDP message with click info
-                        message = f"CLICK:{box_number}"
+                        message = f"H:{box_number}"
                         udp_send_socket.sendto(message.encode(), (UDP_SEND_IP, UDP_SEND_PORT))
     
     # Check for incoming UDP messages to change box colors
