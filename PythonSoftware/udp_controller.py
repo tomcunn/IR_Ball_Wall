@@ -69,7 +69,7 @@ class ChimeCounter:
         self.width = 400
         self.height = 300
         self.screen = pygame.display.set_mode((self.width, self.height))
-        pygame.display.set_caption("0x16 Command Counter")
+        pygame.display.set_caption("LED Ball Wall Control Panel")
         
         # Colors
         self.WHITE = (255, 255, 255)
