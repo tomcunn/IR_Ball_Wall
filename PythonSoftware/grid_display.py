@@ -55,7 +55,11 @@ clock = pygame.time.Clock()
 
 # Main game loop
 running = True
+
+
 while running:
+
+    #Check for mouse clicks
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -72,17 +76,17 @@ while running:
                     if (inner_x <= mouse_x <= inner_x + INNER_BOX_SIZE and
                         inner_y <= mouse_y <= inner_y + INNER_BOX_SIZE):
                         box_number = row * GRID_SIZE + col
-                        print(f"Black portion clicked - Box: Row {row}, Column {col}, Box Number: {box_number}")
+                        print(f"Clicked Box Number: {box_number}")
                         box_colors[row][col] = GREEN
                         # Send UDP message with click info
-                        message = f"CLICK:{box_number},{row},{col}"
+                        message = f"CLICK:{box_number}"
                         udp_send_socket.sendto(message.encode(), (UDP_SEND_IP, UDP_SEND_PORT))
     
     # Check for incoming UDP messages to change box colors
     try:
         data, addr = udp_receive_socket.recvfrom(1024)
         message = data.decode().strip()
-        # Expected format: "box_number,color" or "row,col,color"
+        # Expected format: "box_number,color"
         parts = message.split(',')
         if len(parts) == 2:
             # Format: box_number,color
@@ -93,20 +97,15 @@ while running:
                 col = box_number % GRID_SIZE
                 box_colors[row][col] = color_map[color_name]
                 print(f"UDP: Changed box {box_number} (row {row}, col {col}) to {color_name}")
-        elif len(parts) == 3:
-            # Format: row,col,color
-            row = int(parts[0])
-            col = int(parts[1])
-            color_name = parts[2].upper()
-            if color_name in color_map and 0 <= row < GRID_SIZE and 0 <= col < GRID_SIZE:
-                box_colors[row][col] = color_map[color_name]
-                print(f"UDP: Changed box at row {row}, col {col} to {color_name}")
+
     except BlockingIOError:
         # No data available, continue
         pass
     except Exception as e:
         print(f"Error processing UDP message: {e}")
-    
+
+    #   This is where everything gets drawn to the screen
+
     # Fill background
     WINDOW.fill(GREY)
     

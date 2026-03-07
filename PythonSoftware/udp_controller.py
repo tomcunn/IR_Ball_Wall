@@ -1,8 +1,10 @@
 import socket
 import threading
 import sys
+from keyboard import send
 import pygame
 import numpy as np
+from datetime import datetime
 
 def get_local_ip():
     """Get the local IP address of this computer"""
@@ -19,7 +21,7 @@ def get_local_ip():
 # ============================================================
 # CONFIGURATION: Set to True for simulator, False for ESP32
 # ============================================================
-USE_SIMULATOR = False  # Change this to switch modes
+USE_SIMULATOR = True  # Change this to switch modes
 # ============================================================
 
 if USE_SIMULATOR:
@@ -49,7 +51,6 @@ print("\nIMPORTANT: Make sure ESP32 is sending to this computer's IP address!")
 print("\nAvailable colors: WHITE, BLACK, BLUE, GREY, RED, GREEN")
 print("\nCommands:")
 print("  - Change by box number: <box_number>,<color>  (e.g., 5,RED)")
-print("  - Change by position: <row>,<col>,<color>  (e.g., 1,1,BLUE)")
 print("  - Type 'quit' to exit\n")
 
 # Flag to control threads
@@ -83,6 +84,11 @@ class ChimeCounter:
         
         # Counter
         self.counter = 0
+        self.frame_counter = 0 
+        
+        # Box colors array (16 boxes)
+        self.box_colors = ["WHITE"] * 16
+        self.box_colors_previous = ["WHITE"] * 16
         
         # Animation
         self.flash_timer = 0
@@ -144,7 +150,7 @@ class ChimeCounter:
         self.screen.fill(bg_color)
         
         # Draw title
-        title_text = self.title_font.render("0x16 Command Counter", True, self.BLACK)
+        title_text = self.title_font.render("LED Ball Wall Control", True, self.BLACK)
         title_rect = title_text.get_rect(center=(self.width // 2, 60))
         self.screen.blit(title_text, title_rect)
         
@@ -154,7 +160,7 @@ class ChimeCounter:
         self.screen.blit(counter_text, counter_rect)
         
         # Draw info
-        info_text = self.info_font.render("Waiting for 0x16 commands...", True, self.BLACK)
+        info_text = self.info_font.render("Data", True, self.BLACK)
         info_rect = info_text.get_rect(center=(self.width // 2, 240))
         self.screen.blit(info_text, info_rect)
         
@@ -166,12 +172,38 @@ class ChimeCounter:
             if event.type == pygame.QUIT:
                 global running
                 running = False
-        
+        self.frame_counter += 1
+        if(self.frame_counter > 120):
+            self.frame_counter = 0
+        elif(self.frame_counter > 60):
+            self.box_colors[5] = "RED"
+        else:
+            self.box_colors[5] = "WHITE"
+            
+        #check for box color updates and send commands if needed
+        self.CheckforBoxColorUpdates()
+
         self.draw()
         self.clock.tick(60)  # 60 FPS
 
+    #Create a method that checks to see if any of the boxes have changed color
+    #this allows us to only send updates when necessary, instead of every frame
+    def CheckforBoxColorUpdates(self):
+        """Check if any box colors have changed and send updates if needed"""
+        for i in range(16):
+            if self.box_colors[i] != self.box_colors_previous[i]:
+                # Send update for this box
+                color = self.box_colors[i]
+                command = f"{i},{color}"
+                send_color_command(command)
+                # Update previous colors
+                self.box_colors_previous[i] = self.box_colors[i]
+
 # Initialize ChimeCounter GUI
 chime_gui = ChimeCounter()
+
+# Timer for periodic color commands
+last_color_command_time = 0
 
 # ============================================================
 # UDP THREADS
@@ -211,7 +243,8 @@ def send_color_command(command):
     """Send a color change command to the grid app"""
     try:
         send_socket.sendto(command.encode(), (GRID_APP_IP, SEND_PORT))
-        print(f"[SENT] {command}")
+        timestamp = datetime.now().strftime("%H:%M:%S.%f")[:-3]
+        print(f"[SENT {timestamp}] {command}")
     except Exception as e:
         print(f"Error sending command: {e}")
 
