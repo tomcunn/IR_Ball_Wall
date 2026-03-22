@@ -21,7 +21,7 @@ def get_local_ip():
 # ============================================================
 # CONFIGURATION: Set to True for simulator, False for ESP32
 # ============================================================
-USE_SIMULATOR = True  # Change this to switch modes
+USE_SIMULATOR = False  # Change this to switch modes
 # ============================================================
 
 if USE_SIMULATOR:
