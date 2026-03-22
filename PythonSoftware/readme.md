@@ -14,5 +14,5 @@
 
 ## LED Configuratio
 
-Each Square has 48 LEDS. 
+Each Square has 48 LEDS. The first square may only have 47 LEDs.
 
