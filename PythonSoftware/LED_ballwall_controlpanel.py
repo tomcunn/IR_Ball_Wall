@@ -103,6 +103,7 @@ class ChimeCounter:
         
         # Box colors array (16 boxes)
         self.box_colors = ["WHITE"] * 16
+        self.base_box_colors = ["WHITE"] * 16
         self.box_colors_previous = ["WHITE"] * 16
         self.box_hits = [0] * 16
         self.box_points = [0] * 16
@@ -112,6 +113,8 @@ class ChimeCounter:
         # Animation
         self.flash_timer = 0
         self.flash_duration = 500  # milliseconds
+        self.hit_override_ms = 350
+        self.hit_override_until = [0] * 16
         
         # Clock
         self.clock = pygame.time.Clock()
@@ -156,17 +159,25 @@ class ChimeCounter:
         self.box_hits[command] += 1
 
         #Set the scoring for the game
-        if(self.box_colors[command] == "GREEN"):
+        if(self.base_box_colors[command] == "GREEN"):
             self.box_points[command] += 1
-        elif(self.box_colors[command] == "RED"):
+        elif(self.base_box_colors[command] == "RED"):
             self.box_points[command] += 2
-        elif(self.box_colors[command] == "BLUE"):
+        elif(self.base_box_colors[command] == "BLUE"):
             self.box_points[command] += 3
 
         self.total_points = sum(self.box_points)
-
+        self.hit_override_until[command] = pygame.time.get_ticks() + self.hit_override_ms
         self.flash_timer = pygame.time.get_ticks()
         self.play_chime()
+
+    def apply_hit_overrides(self):
+        """Compose displayed colors from base colors plus active hit overrides."""
+        now = pygame.time.get_ticks()
+        for i in range(16):
+            self.box_colors[i] = self.base_box_colors[i]
+            if now < self.hit_override_until[i]:
+                self.box_colors[i] = "BLUE"
     
     def draw_grid(self):
         """Draw a 4x4 grid of boxes (20px each, 3px spacing)"""
@@ -226,58 +237,58 @@ class ChimeCounter:
         self.seconds = self.frame_counter // 60
 
         #The starting box colors
-        self.box_colors[0] = "GREEN"
-        self.box_colors[1] = "GREEN"
-        self.box_colors[2] = "GREEN"
-        self.box_colors[3] = "GREEN"
-        self.box_colors[4] = "GREEN"
-        self.box_colors[5] = "RED"
-        self.box_colors[6] = "RED"
-        self.box_colors[7] = "GREEN"
-        self.box_colors[8] = "GREEN"
-        self.box_colors[9] = "RED"
-        self.box_colors[10] = "RED"
-        self.box_colors[11] = "GREEN"
-        self.box_colors[12] = "GREEN"
-        self.box_colors[13] = "GREEN"
-        self.box_colors[14] = "GREEN"
-        self.box_colors[15] = "GREEN"
+        self.base_box_colors[0] = "GREEN"
+        self.base_box_colors[1] = "GREEN"
+        self.base_box_colors[2] = "GREEN"
+        self.base_box_colors[3] = "GREEN"
+        self.base_box_colors[4] = "GREEN"
+        self.base_box_colors[5] = "RED"
+        self.base_box_colors[6] = "RED"
+        self.base_box_colors[7] = "GREEN"
+        self.base_box_colors[8] = "GREEN"
+        self.base_box_colors[9] = "RED"
+        self.base_box_colors[10] = "RED"
+        self.base_box_colors[11] = "GREEN"
+        self.base_box_colors[12] = "GREEN"
+        self.base_box_colors[13] = "GREEN"
+        self.base_box_colors[14] = "GREEN"
+        self.base_box_colors[15] = "GREEN"
 
         if(self.seconds >= 20):
-            self.box_colors[0] = "RED"
-            self.box_colors[1] = "RED"
-            self.box_colors[2] = "RED"
-            self.box_colors[3] = "RED"
-            self.box_colors[4] = "RED"
-            self.box_colors[5] = "GREEN"
-            self.box_colors[6] = "GREEN"
-            self.box_colors[7] = "RED"
-            self.box_colors[8] = "RED"
-            self.box_colors[9] = "GREEN"
-            self.box_colors[10] = "GREEN"
-            self.box_colors[11] = "BLUE"
-            self.box_colors[12] = "BLUE"
-            self.box_colors[13] = "BLUE"
-            self.box_colors[14] = "BLUE"
-            self.box_colors[15] = "BLUE"
+            self.base_box_colors[0] = "RED"
+            self.base_box_colors[1] = "RED"
+            self.base_box_colors[2] = "RED"
+            self.base_box_colors[3] = "RED"
+            self.base_box_colors[4] = "RED"
+            self.base_box_colors[5] = "GREEN"
+            self.base_box_colors[6] = "GREEN"
+            self.base_box_colors[7] = "RED"
+            self.base_box_colors[8] = "RED"
+            self.base_box_colors[9] = "GREEN"
+            self.base_box_colors[10] = "GREEN"
+            self.base_box_colors[11] = "BLUE"
+            self.base_box_colors[12] = "BLUE"
+            self.base_box_colors[13] = "BLUE"
+            self.base_box_colors[14] = "BLUE"
+            self.base_box_colors[15] = "BLUE"
 
         if(self.seconds >= 40):
-            self.box_colors[0] = "GREEN"
-            self.box_colors[1] = "GREEN"
-            self.box_colors[2] = "GREEN"
-            self.box_colors[3] = "GREEN"
-            self.box_colors[4] = "GREEN"
-            self.box_colors[5] = "GREEN"
-            self.box_colors[6] = "GREEN"
-            self.box_colors[7] = "GREEN"
-            self.box_colors[8] = "GREEN"
-            self.box_colors[9] = "GREEN"
-            self.box_colors[10] = "GREEN"
-            self.box_colors[11] = "GREEN"
-            self.box_colors[12] = "GREEN"
-            self.box_colors[13] = "GREEN"
-            self.box_colors[14] = "GREEN"
-            self.box_colors[15] = "GREEN"
+            self.base_box_colors[0] = "GREEN"
+            self.base_box_colors[1] = "GREEN"
+            self.base_box_colors[2] = "GREEN"
+            self.base_box_colors[3] = "GREEN"
+            self.base_box_colors[4] = "GREEN"
+            self.base_box_colors[5] = "GREEN"
+            self.base_box_colors[6] = "GREEN"
+            self.base_box_colors[7] = "GREEN"
+            self.base_box_colors[8] = "GREEN"
+            self.base_box_colors[9] = "GREEN"
+            self.base_box_colors[10] = "GREEN"
+            self.base_box_colors[11] = "GREEN"
+            self.base_box_colors[12] = "GREEN"
+            self.base_box_colors[13] = "GREEN"
+            self.base_box_colors[14] = "GREEN"
+            self.base_box_colors[15] = "GREEN"
 
     def update(self):
         """Update the GUI (non-blocking)"""
@@ -287,6 +298,7 @@ class ChimeCounter:
                 running = False
 
         self.RunGameEngine()
+        self.apply_hit_overrides()
         #check for box color updates and send commands if needed
         self.CheckforBoxColorUpdates()
 
