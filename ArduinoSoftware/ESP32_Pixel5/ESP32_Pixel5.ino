@@ -232,7 +232,7 @@ void loop()
   }
 }
 
-void setBoxColor(Color color)
+void setBoxColor(int number, Color color)
 {
     // Get RGB values from colorMap
     RGBColor rgb = colorMap[color];
@@ -292,7 +292,7 @@ void checkIncomingUDP()
               Serial.println(colorStr);
               
               // Set the box color
-              setBoxColor(color);
+              setBoxColor(5,color);
             }
         }
     }
