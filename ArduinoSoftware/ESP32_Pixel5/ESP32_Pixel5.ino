@@ -1,9 +1,11 @@
 #include <WiFi.h>
 #include <WiFiUdp.h>
 #include <Adafruit_NeoPixel.h>
+#include <Arduino.h>
 
+SET_LOOP_TASK_STACK_SIZE(16 * 1024);
 
-#define LED_STRING_LENGTH 47
+#define LED_STRING_LENGTH 95
 #define LED_pin 18
 
 // NeoPixel Configuration
@@ -52,7 +54,7 @@ RGBColor colorMap[] = {
 };
 
 // Interrupt variables
-volatile bool pinStateChanged22 = false;
+volatile bool pinStateChanged21 = false;
 volatile bool pinStateChanged23 = false;
 volatile unsigned long lastInterruptTime = 0;
 
@@ -73,7 +75,7 @@ void IRAM_ATTR pin23ISR()
 // Interrupt Service Routine for pin 21
 void IRAM_ATTR pin21ISR() 
 {
-    pinStateChanged22 = true;
+    pinStateChanged21 = true;
 }
 
 // Timer interrupt service routine - fires every 10ms
@@ -81,6 +83,11 @@ void IRAM_ATTR onTimer()
 {
     timerFlag = true;
 }
+
+// Forward declarations
+void setBoxColor(int number, Color color);
+Color parseColorString(String colorStr);
+void checkIncomingUDP();
 
 void setup() {
   // Initialize serial communication
@@ -148,7 +155,7 @@ void setup() {
     attachInterrupt(digitalPinToInterrupt(input_pin_A), pin23ISR, RISING);
     attachInterrupt(digitalPinToInterrupt(input_pin_B), pin21ISR, RISING);
 
-    Serial.println("Interrupt attached to pin 23");
+    Serial.println("Interrupt attached to pin 21 and 23");
 
     // Configure pin 22 for 38 kHz PWM output
     ledcAttach(pwm_pin, LEDC_FREQ, LEDC_RESOLUTION);
@@ -157,6 +164,7 @@ void setup() {
     Serial.println("Pin 22 configured for 38 kHz PWM output");
     
     // Initialize NeoPixels on pin 18
+    Serial.printf("Loop task stack before NeoPixel begin: %u bytes free\n", uxTaskGetStackHighWaterMark(NULL));
     pixels.begin();
 
     // Set all pixels to white
@@ -164,7 +172,10 @@ void setup() {
     {
       pixels.setPixelColor(i, pixels.Color(40, 40, 40));  // Start with dim white
     }
+
+    Serial.printf("Loop task stack before first NeoPixel show: %u bytes free\n", uxTaskGetStackHighWaterMark(NULL));
     pixels.show();
+    Serial.printf("Loop task stack after first NeoPixel show: %u bytes free\n", uxTaskGetStackHighWaterMark(NULL));
     
     Serial.println("Pin 18 configured for NeoPixels (" + String(LED_STRING_LENGTH) + " pixels)");
     
@@ -208,21 +219,21 @@ void loop()
     checkIncomingUDP();
     
     //A pin state change has been detected.
-    if (pinStateChanged23||pinStateChanged22) 
+    if (pinStateChanged23||pinStateChanged21) 
     {
       // Handle the pin change here
       if(pinStateChanged23)
       {
          Serial.println("Pin 23 changed!");
       }
-      else if(pinStateChanged22)
+      else if(pinStateChanged21)
       {
-        Serial.println("Pin 22 changed!");
+        Serial.println("Pin 21 changed!");
       }
 
       message = "H:5";
       pinStateChanged23 = false;
-      pinStateChanged22 = false;
+      pinStateChanged21 = false;
 
       // Send UDP packet
       udp.beginPacket(udpAddress, udpPortTX);
@@ -237,11 +248,22 @@ void setBoxColor(int number, Color color)
     // Get RGB values from colorMap
     RGBColor rgb = colorMap[color];
     
-    // Set all pixels to the specified color
-    for (int i = 0; i < LED_STRING_LENGTH; i++) 
+    //Box 5 is pixels 0-47
+    if (number == 5) 
     {
-      pixels.setPixelColor(i, pixels.Color(rgb.red, rgb.green, rgb.blue));
+      for (int i = 0; i < 48; i++) 
+      {
+        pixels.setPixelColor(i, pixels.Color(rgb.red, rgb.green, rgb.blue));
+      }
     }
+    //Box 4 is pixels 48-94
+    else if (number == 4) 
+    {
+      for (int i = 48; i < LED_STRING_LENGTH; i++) 
+      {
+        pixels.setPixelColor(i, pixels.Color(rgb.red, rgb.green, rgb.blue));
+      }
+    } 
     pixels.show();
 }
 
@@ -293,6 +315,18 @@ void checkIncomingUDP()
               
               // Set the box color
               setBoxColor(5,color);
+            }
+            if(boxNumber == 4)
+            {  
+              Color color = parseColorString(colorStr);
+              
+              Serial.print("Box: ");
+              Serial.print(boxNumber);
+              Serial.print(", Color: ");
+              Serial.println(colorStr);
+              
+              // Set the box color
+              setBoxColor(4,color);
             }
         }
     }
