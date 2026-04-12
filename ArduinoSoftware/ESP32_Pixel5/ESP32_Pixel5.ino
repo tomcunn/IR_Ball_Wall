@@ -3,9 +3,11 @@
 #include <Adafruit_NeoPixel.h>
 #include <Arduino.h>
 
-SET_LOOP_TASK_STACK_SIZE(16 * 1024);
+// Adafruit_NeoPixel on ESP32 can use a large temporary buffer during show().
+// Larger strips need more loop task stack to avoid LoadProhibited panics.
+SET_LOOP_TASK_STACK_SIZE(48 * 1024);
 
-#define LED_STRING_LENGTH 95
+#define LED_STRING_LENGTH 239
 #define LED_pin 18
 
 // NeoPixel Configuration
@@ -170,7 +172,7 @@ void setup() {
     // Set all pixels to white
     for (int i = 0; i < LED_STRING_LENGTH; i++) 
     {
-      pixels.setPixelColor(i, pixels.Color(40, 40, 40));  // Start with dim white
+      pixels.setPixelColor(i, pixels.Color(100, 0, 100));  // Start with dim white
     }
 
     Serial.printf("Loop task stack before first NeoPixel show: %u bytes free\n", uxTaskGetStackHighWaterMark(NULL));
@@ -231,7 +233,7 @@ void loop()
         Serial.println("Pin 21 changed!");
       }
 
-      message = "H:5";
+      message = "H:4";
       pinStateChanged23 = false;
       pinStateChanged21 = false;
 
