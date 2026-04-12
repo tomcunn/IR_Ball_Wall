@@ -1,6 +1,7 @@
 import socket
 import threading
 import sys
+import time
 from keyboard import send
 import pygame
 import numpy as np
@@ -48,7 +49,7 @@ print(f"This computer's IP address: {get_local_ip()}")
 print(f"Listening for click events on port {RECEIVE_PORT}")
 print(f"Sending color commands to {GRID_APP_IP}:{SEND_PORT}")
 print("\nIMPORTANT: Make sure ESP32 is sending to this computer's IP address!")
-print("\nAvailable colors: WHITE, BLACK, BLUE, GREY, RED, GREEN")
+print("\nAvailable colors: WHITE, BLACK, BLUE, GREY, RED, GREEN, YELLOW, ORANGE, PURPLE")
 print("\nCommands:")
 print("  - Change by box number: <box_number>,<color>  (e.g., 5,RED)")
 print("  - Type 'quit' to exit\n")
@@ -77,6 +78,9 @@ class ChimeCounter:
         self.BLUE = (0, 120, 215)
         self.GREEN = (0, 200, 0)
         self.RED = (255, 0, 0)
+        self.YELLOW = (255, 255, 0)
+        self.ORANGE = (255, 165, 0)
+        self.PURPLE = (128, 0, 128)
         self.GREY = (128, 128, 128)
         self.LIGHT_GREY = (211, 211, 211)
         
@@ -87,6 +91,9 @@ class ChimeCounter:
             "BLUE": self.BLUE,
             "GREEN": self.GREEN,
             "RED": self.RED,
+            "YELLOW": self.YELLOW,
+            "ORANGE": self.ORANGE,
+            "PURPLE": self.PURPLE,
             "GREY": self.GREY
         }
         
@@ -237,10 +244,10 @@ class ChimeCounter:
         self.seconds = self.frame_counter // 60
 
         #The starting box colors
-        self.base_box_colors[0] = "GREEN"
-        self.base_box_colors[1] = "GREEN"
-        self.base_box_colors[2] = "GREEN"
-        self.base_box_colors[3] = "GREEN"
+        self.base_box_colors[0] = "PURPLE"
+        self.base_box_colors[1] = "YELLOW"
+        self.base_box_colors[2] = "PURPLE"
+        self.base_box_colors[3] = "YELLOW"
         self.base_box_colors[4] = "GREEN"
         self.base_box_colors[5] = "RED"
         self.base_box_colors[6] = "RED"
@@ -254,11 +261,11 @@ class ChimeCounter:
         self.base_box_colors[14] = "GREEN"
         self.base_box_colors[15] = "GREEN"
 
-        if(self.seconds >= 20):
+        if(self.seconds >= 10):
             self.base_box_colors[0] = "RED"
-            self.base_box_colors[1] = "RED"
-            self.base_box_colors[2] = "RED"
-            self.base_box_colors[3] = "RED"
+            self.base_box_colors[1] = "BLUE"
+            self.base_box_colors[2] = "GREEN"
+            self.base_box_colors[3] = "GREEN"
             self.base_box_colors[4] = "RED"
             self.base_box_colors[5] = "GREEN"
             self.base_box_colors[6] = "GREEN"
@@ -272,7 +279,7 @@ class ChimeCounter:
             self.base_box_colors[14] = "BLUE"
             self.base_box_colors[15] = "BLUE"
 
-        if(self.seconds >= 40):
+        if(self.seconds >= 20):
             self.base_box_colors[0] = "GREEN"
             self.base_box_colors[1] = "GREEN"
             self.base_box_colors[2] = "GREEN"
@@ -391,6 +398,9 @@ receive_thread.start()
 
 input_thread_obj = threading.Thread(target=input_thread, daemon=True)
 input_thread_obj.start()
+
+# Allow time for the UDP connection to fully establish before sending the first packet
+time.sleep(0.5)
 
 # Main GUI loop
 try:

@@ -7,7 +7,13 @@
 // Larger strips need more loop task stack to avoid LoadProhibited panics.
 SET_LOOP_TASK_STACK_SIZE(48 * 1024);
 
-#define LED_STRING_LENGTH 239
+#define LED_STRING_LENGTH 191
+
+#define BOX_0_END_LED 47    //48 LEDS
+#define BOX_1_END_LED 95    //48 LEDS
+#define BOX_2_END_LED 143   //48 LEDS
+#define BOX_3_END_LED 191   //47 LEDS - This box is one short in the prototype
+
 #define LED_pin 18
 
 // NeoPixel Configuration
@@ -45,14 +51,20 @@ struct RGBColor {
 enum Color {
   BLUE = 0,
   GREEN = 1,
-  RED = 2
+  RED = 2,
+  YELLOW = 3,
+  ORANGE = 4,
+  PURPLE = 5
 };
 
 // Color map - maps enum values to RGB colors
 RGBColor colorMap[] = {
   {0, 0, 255},      // BLUE = 0
   {0, 255, 0},      // GREEN = 1
-  {255, 0, 0}       // RED = 2
+  {255, 0, 0},      // RED = 2
+  {255, 255, 0},    // YELLOW = 3
+  {255, 165, 0},    // ORANGE = 4
+  {128, 0, 128}     // PURPLE = 5
 };
 
 // Interrupt variables
@@ -233,7 +245,7 @@ void loop()
         Serial.println("Pin 21 changed!");
       }
 
-      message = "H:4";
+      message = "H:3";
       pinStateChanged23 = false;
       pinStateChanged21 = false;
 
@@ -250,35 +262,56 @@ void setBoxColor(int number, Color color)
     // Get RGB values from colorMap
     RGBColor rgb = colorMap[color];
     
-    //Box 5 is pixels 0-47
-    if (number == 5) 
+    // Box 0 is pixels 0-47
+    if (number == 0) 
     {
-      for (int i = 0; i < 48; i++) 
+      for (int i = 0; i <= BOX_0_END_LED; i++) 
       {
-        pixels.setPixelColor(i, pixels.Color(rgb.red, rgb.green, rgb.blue));
+      pixels.setPixelColor(i, pixels.Color(rgb.red, rgb.green, rgb.blue));
       }
     }
-    //Box 4 is pixels 48-94
-    else if (number == 4) 
+    // Box 1 is pixels 48-95
+    else if (number == 1) 
     {
-      for (int i = 48; i < LED_STRING_LENGTH; i++) 
+      for (int i = BOX_0_END_LED + 1; i <= BOX_1_END_LED; i++) 
       {
-        pixels.setPixelColor(i, pixels.Color(rgb.red, rgb.green, rgb.blue));
+      pixels.setPixelColor(i, pixels.Color(rgb.red, rgb.green, rgb.blue));
       }
-    } 
+    }
+    // Box 2 is pixels 96-143
+    else if (number == 2) 
+    {
+      for (int i = BOX_1_END_LED + 1; i <= BOX_2_END_LED; i++) 
+      {
+      pixels.setPixelColor(i, pixels.Color(rgb.red, rgb.green, rgb.blue));
+      }
+    }
+    // Box 3 is pixels 144-190
+    else if (number == 3) 
+    {
+      for (int i = BOX_2_END_LED + 1; i <= BOX_3_END_LED; i++) 
+      {
+      pixels.setPixelColor(i, pixels.Color(rgb.red, rgb.green, rgb.blue));
+      }
+    }
+   
+
     pixels.show();
 }
 
 Color parseColorString(String colorStr)
 {
-    // Convert string to uppercase for comparison
-    colorStr.toUpperCase();
-    
-    if (colorStr == "BLUE") return BLUE;
-    if (colorStr == "GREEN") return GREEN;
-    if (colorStr == "RED") return RED;
-    
-    return GREEN;  // Default to GREEN if unknown
+  // Convert string to uppercase for comparison
+  colorStr.toUpperCase();
+  
+  if (colorStr == "BLUE") return BLUE;
+  if (colorStr == "GREEN") return GREEN;
+  if (colorStr == "RED") return RED;
+  if (colorStr == "YELLOW") return YELLOW;
+  if (colorStr == "ORANGE") return ORANGE;
+  if (colorStr == "PURPLE") return PURPLE;
+  
+  return GREEN;  // Default to GREEN if unknown
 }
 
 void checkIncomingUDP()
@@ -306,7 +339,7 @@ void checkIncomingUDP()
             String colorStr = incomingMessage.substring(commaIndex + 1);
             
             int boxNumber = boxStr.toInt();
-            if(boxNumber == 5)
+            if(boxNumber >= 0 && boxNumber <= 3)
             {  
               Color color = parseColorString(colorStr);
               
@@ -316,19 +349,7 @@ void checkIncomingUDP()
               Serial.println(colorStr);
               
               // Set the box color
-              setBoxColor(5,color);
-            }
-            if(boxNumber == 4)
-            {  
-              Color color = parseColorString(colorStr);
-              
-              Serial.print("Box: ");
-              Serial.print(boxNumber);
-              Serial.print(", Color: ");
-              Serial.println(colorStr);
-              
-              // Set the box color
-              setBoxColor(4,color);
+              setBoxColor(boxNumber, color);
             }
         }
     }

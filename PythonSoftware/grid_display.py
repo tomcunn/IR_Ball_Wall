@@ -17,6 +17,9 @@ BLUE = (100, 150, 255)
 GREY = (128, 128, 128)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
+YELLOW = (255, 255, 0)
+ORANGE = (255, 165, 0)
+PURPLE = (128, 0, 128)
 
 # Grid settings
 BOX_SIZE = 100
@@ -46,7 +49,10 @@ color_map = {
     "BLUE": BLUE,
     "GREY": GREY,
     "RED": RED,
-    "GREEN": GREEN
+    "GREEN": GREEN,
+    "YELLOW": YELLOW,
+    "ORANGE": ORANGE,
+    "PURPLE": PURPLE
 }
 
 
