@@ -72,6 +72,9 @@ volatile bool pinStateChanged21 = false;
 volatile bool pinStateChanged23 = false;
 volatile unsigned long lastInterruptTime = 0;
 
+// Debounce variables (350ms / 10ms = 35 cycles)
+const int DEBOUNCE_CYCLES = 35;  // 350ms at 10ms task rate
+int debounce_counter = 0;  // Counts down until debounce expires
 
 // Timer interrupt variables
 hw_timer_t *timer = NULL;
@@ -232,27 +235,45 @@ void loop()
     // Check for incoming UDP messages
     checkIncomingUDP();
     
+    // Decrement debounce counter (only if active)
+    if (debounce_counter > 0) 
+    {
+      debounce_counter--;
+    }
+    
     //A pin state change has been detected.
     if (pinStateChanged23||pinStateChanged21) 
     {
-      // Handle the pin change here
-      if(pinStateChanged23)
+      // Only send if debounce period has expired
+      if (debounce_counter == 0) 
       {
-         Serial.println("Pin 23 changed!");
-      }
-      else if(pinStateChanged21)
-      {
-        Serial.println("Pin 21 changed!");
-      }
+        // Handle the pin change here
+        if(pinStateChanged23)
+        {
+           Serial.println("Pin 23 changed!");
+        }
+        else if(pinStateChanged21)
+        {
+          Serial.println("Pin 21 changed!");
+        }
 
-      message = "H:3";
+        message = "H:0";
+        debounce_counter = DEBOUNCE_CYCLES;  // Start debounce countdown
+
+        // Send UDP packet
+        udp.beginPacket(udpAddress, udpPortTX);
+        udp.print(message);
+        udp.endPacket();
+      }
+      else 
+      {
+        // Hit ignored due to debounce
+        Serial.print("Hit ignored - debounce active. Cycles remaining: ");
+        Serial.println(debounce_counter);
+      }
+      
       pinStateChanged23 = false;
       pinStateChanged21 = false;
-
-      // Send UDP packet
-      udp.beginPacket(udpAddress, udpPortTX);
-      udp.print(message);
-      udp.endPacket();
     }
   }
 }
